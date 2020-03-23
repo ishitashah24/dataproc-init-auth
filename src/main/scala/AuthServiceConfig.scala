@@ -26,6 +26,7 @@ object AuthServiceConfig {
       dir = sys.env.getOrElse("APP_DIR", "."),
       projectId = sys.env("PROJECT"),
       zone = sys.env("ZONE"),
+      // https enabled variable
       audience = sys.env("AUDIENCE"),
       maxAgeSeconds = sys.env.getOrElse("MAX_AGE", "300").toInt
     ).validate()
