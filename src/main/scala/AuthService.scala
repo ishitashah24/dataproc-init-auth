@@ -17,9 +17,13 @@
 package com.google.cloud.dataproc.auth
 
 import java.nio.file.{Files, Paths}
-
+import java.io.InputStream
+import java.security.{ SecureRandom, KeyStore }
+import javax.net.ssl.{ SSLContext, TrustManagerFactory, KeyManagerFactory }
 import akka.actor.ActorSystem
 import akka.http.scaladsl._
+import akka.http.scaladsl.server.{ Route, Directives }
+import akka.http.scaladsl.{ ConnectionContext, HttpsConnectionContext, Http }
 import akka.http.scaladsl.coding.{Gzip, NoCoding}
 import akka.http.scaladsl.model.{ContentType, HttpEntity, MediaTypes, RemoteAddress}
 import akka.http.scaladsl.model.RemoteAddress.IP
@@ -34,17 +38,59 @@ import com.google.api.client.json.jackson2.JacksonFactory
 import com.google.api.services.compute.model.Instance
 import com.google.api.services.dataproc.model.{Cluster, ClusterConfig, InstanceGroupConfig}
 import com.google.cloud.dataproc.auth.ApiQuery.ClusterFilter
-
+import com.typesafe.sslconfig.akka.AkkaSSLConfig
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.JavaConverters._
 import scala.concurrent.ExecutionContext
+
+
+implicit val dispatcher = system.dispatcher
+
+// Manual HTTPS configuration
+
+// sets default context to HTTPS – all Http() bound servers for this ActorSystem will use HTTPS from now on
+Http().setDefaultServerHttpContext(https)
+Http().bindAndHandle(routes, "127.0.0.1", 9090, connectionContext = https)
+
+// IP address and port as argument
+// env variable or accepts arguments command line- main class
+
+// implicit val system = ActorSystem()
+
+// option if , val sslConfig = AkkaSSLConfig()
+// openssl s_connect or curl and will give the certificate
+
+// ConnectionContext
+def https(
+  sslContext:          SSLContext,
+  sslConfig:           Option[AkkaSSLConfig]         = None,
+  enabledCipherSuites: Option[immutable.Seq[String]] = None,
+  enabledProtocols:    Option[immutable.Seq[String]] = None,
+  clientAuth:          Option[TLSClientAuth]         = None,
+  sslParameters:       Option[SSLParameters]         = None) =
+  new HttpsConnectionContext(sslContext, sslConfig, enabledCipherSuites, enabledProtocols, clientAuth, sslParameters)
+
+
+
 
 object AuthService {
   def main(args: Array[String]): Unit = {
     implicit val sys: ActorSystem = ActorSystem()
     implicit val mat: ActorMaterializer = ActorMaterializer()
     implicit val ctx: ExecutionContext = sys.dispatcher
-
+    val password: Array[Char] = "change me".toCharArray // do not store passwords in code, read them from somewhere safe!
+    val ks: KeyStore = KeyStore.getInstance("PKCS12")
+    #which one the application supports i.e. akkahttp web framework
+    val keystore: InputStream = getClass.getClassLoader.getResourceAsStream("server.p12")
+    require(keystore != null, "Keystore required!")
+    ks.load(keystore, password)
+    val keyManagerFactory: KeyManagerFactory = KeyManagerFactory.getInstance("SunX509")
+    keyManagerFactory.init(ks, password)
+    val tmf: TrustManagerFactory = TrustManagerFactory.getInstance("SunX509")
+    tmf.init(ks)
+    val sslContext: SSLContext = SSLContext.getInstance("TLS")
+    sslContext.init(keyManagerFactory.getKeyManagers, tmf.getTrustManagers, new SecureRandom)
+    val https: HttpsConnectionContext = ConnectionContext.https(sslContext)
     run(AuthServiceConfig.fromEnv)
   }
 
@@ -53,7 +99,8 @@ object AuthService {
     import config._
     val handler = handle(dir, projectId, zone, maxAgeSeconds, config.audience)
     val settings = ServerSettings(configOverrides = "akka.http.server.remote-address-header = true")
-    val server = Http().bindAndHandle(handler, interface, port, settings = settings)
+    val ssl_settings = HttpsConnectionContext(sslContext, sslConfig, enabledCipherSuites, enabledProtocols, clientAuth, sslParameters)
+    val server = Http().bindAndHandle(handler, interface, port, settings = settings,ssl_settings) 
     System.out.println(s"Listening on $interface:$port")
   }
 
