@@ -15,7 +15,6 @@
  */
 
 package com.google.cloud.dataproc.auth
-
 import java.time.{LocalDateTime, ZoneOffset}
 import java.time.format.DateTimeFormatter
 

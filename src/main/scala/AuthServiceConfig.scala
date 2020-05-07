@@ -13,14 +13,13 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-
 package com.google.cloud.dataproc.auth
-
 import java.nio.file.{Files, Paths}
 
-//Define the environment variables and validates the input variables
-
 object AuthServiceConfig {
+  /**
+   *Defines environment variables for web server and validates them
+   */
   def fromEnv: AuthServiceConfig =
     AuthServiceConfig(
       // set env variables

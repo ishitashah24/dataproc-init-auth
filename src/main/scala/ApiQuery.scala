@@ -13,9 +13,7 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-
 package com.google.cloud.dataproc.auth
-
 import java.time.{LocalDateTime, ZoneOffset}
 import java.time.format.DateTimeFormatter
 import java.time.temporal.{ChronoUnit, TemporalUnit}
@@ -26,6 +24,9 @@ import com.google.api.services.dataproc.model.Cluster
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.JavaConverters._
 
+/**
+ *
+ */
 object ApiQuery {
   val ClusterFields: Seq[String] = Seq("projectId", "clusterName", "config", "labels", "status",
     "clusterUuid")

@@ -15,7 +15,6 @@
  */
 
 package com.google.cloud.dataproc.auth
-
 import java.nio.file.{Files, Paths}
 import java.io.InputStream
 import java.security.{KeyStore, SecureRandom}
@@ -47,11 +46,10 @@ import scala.collection.JavaConverters._
 import scala.collection.parallel.immutable
 import scala.concurrent.ExecutionContext
 
-//Get the environment variables and creates a handler to handle the parameters passed and binds them to the http server.
-//Verifies the cluster
-
-
 object AuthService {
+  /**
+   *Creates a web server
+   */
   def main(args: Array[String]): Unit = {
 
     implicit val sys: ActorSystem = ActorSystem()

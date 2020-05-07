@@ -13,9 +13,7 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-
 package com.google.cloud.dataproc.auth
-
 import com.google.api.client.http.{HttpRequestInitializer, HttpTransport}
 import com.google.api.client.http.apache.v2.ApacheHttpTransport
 import com.google.api.client.json.JsonFactory
@@ -25,15 +23,16 @@ import com.google.api.services.dataproc.Dataproc
 import com.google.auth.http.HttpCredentialsAdapter
 import com.google.auth.oauth2.GoogleCredentials
 
-// Create a client object
-// Initialise global parameters via ```Compute.Builder``` and ```Dataproc.Builder```
-
 object Client {
+  /**
+   * Creates a client object
+   */
   private lazy val credentials: GoogleCredentials = GoogleCredentials.getApplicationDefault
   private lazy val httpRequestInitializer: HttpRequestInitializer = new HttpCredentialsAdapter(credentials)
   private lazy val httpTransport: HttpTransport = new ApacheHttpTransport
   lazy val jsonFactory: JsonFactory = JacksonFactory.getDefaultInstance
 
+  // Initialise global parameters via ```Compute.Builder``` and ```Dataproc.Builder```
   @transient lazy val compute: Compute =
     new Compute.Builder(httpTransport, jsonFactory, httpRequestInitializer)
       .setApplicationName("dataproc-init-auth").build
