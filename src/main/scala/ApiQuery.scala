@@ -31,7 +31,6 @@ object ApiQuery {
     "clusterUuid")
 
   val ComputeFields: Seq[String] = Seq(
-    //"creationTimestamp",
     "name", "zone", "networkInterfaces",
     "metadata", "labels", "hostname")
 

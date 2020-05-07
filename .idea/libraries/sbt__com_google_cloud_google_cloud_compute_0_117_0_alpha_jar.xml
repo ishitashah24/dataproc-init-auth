@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="sbt: com.google.cloud:google-cloud-compute:0.117.0-alpha:jar">
+    <CLASSES>
+      <root url="jar://$USER_HOME$/.ivy2/cache/com.google.cloud/google-cloud-compute/jars/google-cloud-compute-0.117.0-alpha.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$USER_HOME$/.ivy2/cache/com.google.cloud/google-cloud-compute/srcs/google-cloud-compute-0.117.0-alpha-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

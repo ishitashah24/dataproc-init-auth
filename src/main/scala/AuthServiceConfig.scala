@@ -18,16 +18,19 @@ package com.google.cloud.dataproc.auth
 
 import java.nio.file.{Files, Paths}
 
+//Define the environment variables and validates the input variables
+
 object AuthServiceConfig {
   def fromEnv: AuthServiceConfig =
     AuthServiceConfig(
+      // set env variables
       interface = sys.env.getOrElse("BIND_ADDR", "localhost"),
       port = sys.env.getOrElse("BIND_PORT", "8080").toInt,
       dir = sys.env.getOrElse("APP_DIR", "."),
       projectId = sys.env("PROJECT"),
       zone = sys.env("ZONE"),
-      // https enabled variable
       audience = sys.env("AUDIENCE"),
+      // set maximum time till which the token is available for a cluster
       maxAgeSeconds = sys.env.getOrElse("MAX_AGE", "300").toInt
     ).validate()
 }

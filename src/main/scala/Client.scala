@@ -25,6 +25,9 @@ import com.google.api.services.dataproc.Dataproc
 import com.google.auth.http.HttpCredentialsAdapter
 import com.google.auth.oauth2.GoogleCredentials
 
+// Create a client object
+// Initialise global parameters via ```Compute.Builder``` and ```Dataproc.Builder```
+
 object Client {
   private lazy val credentials: GoogleCredentials = GoogleCredentials.getApplicationDefault
   private lazy val httpRequestInitializer: HttpRequestInitializer = new HttpCredentialsAdapter(credentials)

@@ -18,12 +18,13 @@ package com.google.cloud.dataproc.auth
 
 import java.nio.file.{Files, Paths}
 import java.io.InputStream
-import java.security.{ SecureRandom, KeyStore }
-import javax.net.ssl.{ SSLContext, TrustManagerFactory, KeyManagerFactory }
+import java.security.{KeyStore, SecureRandom}
+
+import javax.net.ssl.{KeyManagerFactory, SSLContext, SSLParameters, TrustManagerFactory}
 import akka.actor.ActorSystem
 import akka.http.scaladsl._
-import akka.http.scaladsl.server.{ Route, Directives }
-import akka.http.scaladsl.{ ConnectionContext, HttpsConnectionContext, Http }
+import akka.http.scaladsl.server.{Directives, Route}
+import akka.http.scaladsl.{ConnectionContext, Http, HttpsConnectionContext}
 import akka.http.scaladsl.coding.{Gzip, NoCoding}
 import akka.http.scaladsl.model.{ContentType, HttpEntity, MediaTypes, RemoteAddress}
 import akka.http.scaladsl.model.RemoteAddress.IP
@@ -33,54 +34,32 @@ import akka.http.scaladsl.server.directives.BasicDirectives.{extractLog, extract
 import akka.http.scaladsl.server.directives.RouteDirectives.{complete, reject}
 import akka.http.scaladsl.settings.ServerSettings
 import akka.stream.scaladsl.FileIO
-import akka.stream.{ActorMaterializer, Materializer}
+import akka.stream.{ActorMaterializer, Materializer, TLSClientAuth}
 import com.google.api.client.json.jackson2.JacksonFactory
 import com.google.api.services.compute.model.Instance
 import com.google.api.services.dataproc.model.{Cluster, ClusterConfig, InstanceGroupConfig}
 import com.google.cloud.dataproc.auth.ApiQuery.ClusterFilter
 import com.typesafe.sslconfig.akka.AkkaSSLConfig
+import org.apache.http.auth.AuthenticationException
+
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.JavaConverters._
+import scala.collection.parallel.immutable
 import scala.concurrent.ExecutionContext
 
-
-implicit val dispatcher = system.dispatcher
-
-// Manual HTTPS configuration
-
-// sets default context to HTTPS – all Http() bound servers for this ActorSystem will use HTTPS from now on
-Http().setDefaultServerHttpContext(https)
-Http().bindAndHandle(routes, "127.0.0.1", 9090, connectionContext = https)
-
-// IP address and port as argument
-// env variable or accepts arguments command line- main class
-
-// implicit val system = ActorSystem()
-
-// option if , val sslConfig = AkkaSSLConfig()
-// openssl s_connect or curl and will give the certificate
-
-// ConnectionContext
-def https(
-  sslContext:          SSLContext,
-  sslConfig:           Option[AkkaSSLConfig]         = None,
-  enabledCipherSuites: Option[immutable.Seq[String]] = None,
-  enabledProtocols:    Option[immutable.Seq[String]] = None,
-  clientAuth:          Option[TLSClientAuth]         = None,
-  sslParameters:       Option[SSLParameters]         = None) =
-  new HttpsConnectionContext(sslContext, sslConfig, enabledCipherSuites, enabledProtocols, clientAuth, sslParameters)
-
-
+//Get the environment variables and creates a handler to handle the parameters passed and binds them to the http server.
+//Verifies the cluster
 
 
 object AuthService {
   def main(args: Array[String]): Unit = {
+
     implicit val sys: ActorSystem = ActorSystem()
     implicit val mat: ActorMaterializer = ActorMaterializer()
     implicit val ctx: ExecutionContext = sys.dispatcher
-    val password: Array[Char] = "change me".toCharArray // do not store passwords in code, read them from somewhere safe!
+
+    val password: Array[Char] = "change me".toCharArray 
     val ks: KeyStore = KeyStore.getInstance("PKCS12")
-    #which one the application supports i.e. akkahttp web framework
     val keystore: InputStream = getClass.getClassLoader.getResourceAsStream("server.p12")
     require(keystore != null, "Keystore required!")
     ks.load(keystore, password)
@@ -88,19 +67,19 @@ object AuthService {
     keyManagerFactory.init(ks, password)
     val tmf: TrustManagerFactory = TrustManagerFactory.getInstance("SunX509")
     tmf.init(ks)
-    val sslContext: SSLContext = SSLContext.getInstance("TLS")
-    sslContext.init(keyManagerFactory.getKeyManagers, tmf.getTrustManagers, new SecureRandom)
-    val https: HttpsConnectionContext = ConnectionContext.https(sslContext)
+
     run(AuthServiceConfig.fromEnv)
   }
+
 
   def run(config: AuthServiceConfig)
          (implicit sys: ActorSystem, mat: ActorMaterializer, ctx: ExecutionContext): Unit = {
     import config._
     val handler = handle(dir, projectId, zone, maxAgeSeconds, config.audience)
     val settings = ServerSettings(configOverrides = "akka.http.server.remote-address-header = true")
-    val ssl_settings = HttpsConnectionContext(sslContext, sslConfig, enabledCipherSuites, enabledProtocols, clientAuth, sslParameters)
-    val server = Http().bindAndHandle(handler, interface, port, settings = settings,ssl_settings) 
+    val sslConfig = Option(AkkaSSLConfig())
+    val sslContext: SSLContext = SSLContext.getInstance("TLS")
+    val server = Http().bindAndHandle(handler, interface, port, settings = settings)
     System.out.println(s"Listening on $interface:$port")
   }
 
@@ -135,16 +114,16 @@ object AuthService {
           entity(as[String]){tokenEnc =>
             val id = EnhancedIdToken(tokenEnc)
             if (!id.verify(audience))
-              reject(ValidationRejection(s"invalid audience '$audience'"))
+              throw new AuthenticationException(s"invalid audience '$audience'")
             else if (id.age > maxAgeSeconds)
-              reject(ValidationRejection(s"age ${id.age} exceeds $maxAgeSeconds"))
+              throw new AuthenticationException(s"age ${id.age} exceeds $maxAgeSeconds")
             else {
               val instance = ApiQuery.getInstance(projectId, zone, id.instanceName)
               if (instance.isEmpty) {
-                reject(ValidationRejection(s"unable to find instance '${id.instanceName}'"))
+                throw new AuthenticationException(s"unable to find instance '${id.instanceName}'")
               } else {
                 if (!hasIp(ip, instance.get)){
-                  reject(ValidationRejection(s"'${id.instanceName}' doesn't have ip $ip"))
+                  throw new AuthenticationException(s"'${id.instanceName}' doesn't have ip $ip")
                 } else {
                   val clusterName = instance.get.getMetadata.getItems.asScala
                     .find(_.getKey == ApiQuery.ClusterLabel).map(_.getValue)
@@ -159,7 +138,7 @@ object AuthService {
                           val path = unmatchedPath.toString
                           val basedir = Paths.get(dir).toAbsolutePath
                           if (path.contains(".."))
-                            reject(ValidationRejection(s"bad path $path"))
+                            throw new AuthenticationException(s"bad path $path")
                           else {
                             val f = basedir.resolve(path.stripPrefix("/")).toAbsolutePath
                             if (f.toString.length > basedir.toString.length &&
@@ -168,13 +147,12 @@ object AuthService {
                                 MediaTypes.`application/octet-stream`,
                                 f.toFile.length,
                                 FileIO.fromPath(f)))
-                            } else reject(ValidationRejection(s"invalid path $path"))
+                            } else throw new AuthenticationException(s"invalid path $path") 
                           }
                         }
-                      } else reject(ValidationRejection(
-                        s"cluster '${clusterName.get}' does not have member '${id.instanceName}'"))
-                    } else reject(ValidationRejection(s"unable to find cluster '${clusterName.get}'"))
-                  } else reject(ValidationRejection(s"unable to find key '${ApiQuery.ClusterLabel}'"))
+                      } else throw new AuthenticationException(s"cluster '${clusterName.get}' does not have member '${id.instanceName}'")
+                    } else throw new AuthenticationException(s"unable to find cluster '${clusterName.get}'") 
+                  } else throw new AuthenticationException(s"unable to find key '${ApiQuery.ClusterLabel}'")
                 }
               }
             }

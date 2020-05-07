@@ -15,11 +15,11 @@
  */
 
 package com.google.cloud.dataproc.auth
-
 import java.util.Collections
-
 import com.google.api.client.auth.openidconnect.IdToken
 import com.google.api.client.json.jackson2.JacksonFactory
+
+//Creates an id token, verifies the token issuer, and ensures that the token expires after the cluster is verified.
 
 object EnhancedIdToken {
   def apply(tokenEnc: String): EnhancedIdToken =
@@ -31,6 +31,7 @@ class EnhancedIdToken(val idToken: IdToken){
     .get("google").asInstanceOf[java.util.Map[String,Any]]
     .get("compute_engine").asInstanceOf[java.util.Map[String,Any]]
 
+  // set different parameters which will be used to verify the Dataproc instance
   def projectId: String = m.get("project_id").asInstanceOf[String]
   def projectNumber: Long = m.get("project_number").asInstanceOf[Long]
   def zone: String = m.get("zone").asInstanceOf[String]

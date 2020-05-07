@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="sbt: com.google.apis:google-api-services-dataproc:v1-rev147-1.25.0:jar">
+    <CLASSES>
+      <root url="jar://$USER_HOME$/.ivy2/cache/com.google.apis/google-api-services-dataproc/jars/google-api-services-dataproc-v1-rev147-1.25.0.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$USER_HOME$/.ivy2/cache/com.google.apis/google-api-services-dataproc/srcs/google-api-services-dataproc-v1-rev147-1.25.0-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

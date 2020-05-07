@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ScalaCompilerConfiguration">
+    <profile name="sbt 1" modules="dataproc-init-auth_2860" />
+    <profile name="sbt 2" modules="dataproc-init-auth">
+      <parameters>
+        <parameter value="-optimize" />
+      </parameters>
+    </profile>
+  </component>
+</project>

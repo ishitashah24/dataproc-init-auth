@@ -5,7 +5,7 @@ import google.auth.transport.requests
 from google.oauth2 import id_token
 import os
 
-# Use this script to verify a token on the client
+# Verify a token on the client
 # echo "$token" | ./b64.py
 
 def run():

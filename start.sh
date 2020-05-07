@@ -1,4 +1,6 @@
-#!/bin/bash
+#!/usr/bin/env bash
+
+# starts the server
 export PROJECT={project}
 export ZONE={zone}
 export BIND_ADDR=$(hostname -i)
