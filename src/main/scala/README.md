@@ -1,6 +1,5 @@
 # Dataproc init auth
 
-<<<<<<< HEAD
 File server application with a custom authentication to allow administrators to distribute secrets to Dataproc
 cluster members via the initialization action. After initialization, the assumption is that untrusted users gain access 
 to the nodes and must not be allowed to access the secrets. The application enables to differentiate between cluster
