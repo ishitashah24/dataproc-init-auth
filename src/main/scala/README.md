@@ -1,8 +1,8 @@
-#Dataproc init auth
+# Dataproc init auth
 
-##File server application which has a custom authentication to allow administrators to differentiate between cluster members when the secret is stored on the server. It provides a unique way of distributing secrets to the dataproc cluster members via the initialization action.
+## File server application which has a custom authentication to allow administrators to differentiate between cluster members when the secret is stored on the server. It provides a unique way of distributing secrets to the dataproc cluster members via the initialization action.
 
-#Setup 
+# Setup 
 
 Create a Dataproc Cluster which acts as a server and run a startup script to start the server
 ```
