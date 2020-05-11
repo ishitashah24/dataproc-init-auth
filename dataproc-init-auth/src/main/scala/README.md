@@ -42,9 +42,11 @@ https://cloud.google.com/compute/docs/instances/verifying-instance-identity#curl
     ```
     export AUDIENCE="https://secureinit.local"
     
-    curl -H "Metadata-Flavor: Google" "http://metadata/computeMetadata/
+    tokenenc = $(curl -H "Metadata-Flavor: Google" "http://metadata/computeMetadata/
              v1/instance/service-accounts/default/identity?audience=${AUDIENCE}&
              format=full" 2>/dev/null)
+  
+    curl --data "$tokenenc" $AUDIENCE/secret
     ```
 
 
