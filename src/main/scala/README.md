@@ -40,10 +40,10 @@ An example secret might be a Service Account Keyfile used only during cluster se
 https://cloud.google.com/compute/docs/instances/verifying-instance-identity#curl
 
     ```
-    export AUDIENCE="https://secureinit.local"
+    export HOSTNAME="https://secureinit.local"
     
     curl -H "Metadata-Flavor: Google" "http://metadata/computeMetadata/
-             v1/instance/service-accounts/default/identity?audience=${AUDIENCE}&
+             v1/instance/service-accounts/default/identity?audience=${HOSTNAME}&
              format=full" 2>/dev/null)
     ```
 
