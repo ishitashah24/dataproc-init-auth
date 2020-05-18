@@ -42,16 +42,11 @@ https://cloud.google.com/compute/docs/instances/verifying-instance-identity#curl
     ```
     export HOSTNAME="https://secureinit.local"
     
-<<<<<<< HEAD:dataproc-init-auth/src/main/scala/README.md
-    tokenenc = $(curl -H "Metadata-Flavor: Google" "http://metadata/computeMetadata/
-             v1/instance/service-accounts/default/identity?audience=${AUDIENCE}&
-=======
     curl -H "Metadata-Flavor: Google" "http://metadata/computeMetadata/
              v1/instance/service-accounts/default/identity?audience=${HOSTNAME}&
->>>>>>> 193fd129e1521f3a02b6dd92766756639880f828:src/main/scala/README.md
              format=full" 2>/dev/null)
   
-    curl --data "$tokenenc" $AUDIENCE/secret
+    curl --data "$tokenenc" $HOSTNAME/secret
     ```
 
 
